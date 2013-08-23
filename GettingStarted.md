@@ -34,6 +34,7 @@ Push notifications are one of the most requested features in cloud services for 
 * **Scale.** Scaling this infrastructure has two aspects:
 
 	1. Per PNS guidelines, device tokens must be refreshed every time the app is launched. This leads to a large amount of traffic (and consequent database accesses) just to keep the device tokens up to date. When the number of devices grows (possibly to millions), the cost of creating and maintaining this infrastructure is nonnegligible.
+	
 	2. Most PNS’ do not support broadcast to multiple devices. It follows that a broadcast to millions of devices results in millions of calls to the PNS’. Being able to scale these requests is nontrivial as usually app developers want to keep the total latency down (i.e. the last device to receive the message should not receive the notification 30 minutes after the notifications has been sent, as for many cases it would defeat the purpose to have push notifications).
 
 * **Routing.** PNS’ provide a way to send a message to a device. In most apps though notifications are targeted to users and/or interest groups (i.e. all employees assigned to a certain customer account). It follows that the app back-end has to maintain a registry that associates interest groups with device tokens in order to route the notifications to the correct devices. This overhead adds to the total time to market and maintenance costs of an app.
