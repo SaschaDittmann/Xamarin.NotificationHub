@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{EBFC5320-2993-483E-9DC3-1C5AD857E776}</ProjectGuid>
+    <ProjectTypeGuids>{6BC8ED88-2882-458C-8E55-DFD12B67127B};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ByteSmith.WindowsAzure.Messaging</RootNamespace>
+    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
+    <AssemblyName>ByteSmith.WindowsAzure.Messaging.iOS</AssemblyName>
+    <ReleaseVersion>1.0.0</ReleaseVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="monotouch" />
+    <Reference Include="System.Web.Services" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="..\ByteSmith.WindowsAzure.Messaging\NotificationHubMessage.cs">
+      <Link>NotificationHubMessage.cs</Link>
+    </Compile>
+    <Compile Include="INotificationHub.iOS.cs" />
+    <Compile Include="NotificationHub.iOS.cs" />
+    <Compile Include="Registration.iOS.cs" />
+    <Compile Include="..\ByteSmith.WindowsAzure.Messaging\INotificationHub.cs">
+      <Link>INotificationHub.cs</Link>
+    </Compile>
+    <Compile Include="..\ByteSmith.WindowsAzure.Messaging\NotificationHub.cs">
+      <Link>NotificationHub.cs</Link>
+    </Compile>
+    <Compile Include="..\ByteSmith.WindowsAzure.Messaging\Registration.cs">
+      <Link>Registration.cs</Link>
+    </Compile>
+    <Compile Include="..\ByteSmith.WindowsAzure.Messaging\SASTokenGenerator.cs">
+      <Link>SASTokenGenerator.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>
