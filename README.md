@@ -25,7 +25,63 @@ Notification Hubs are optimized for massive scale. With Notification Hubs, you c
 
 Notification Hubs are backed by a high availability service level agreement. To start sending push notifications to every user on every device, you will need a Windows Azure account. Sign up for the free trial [here](http://www.windowsazure.com/en-us/pricing/free-trial/).
 
-##Register Devices
+##Configure your app to use a Notification Hub
+
+In order to register to a notification hub to receive push notifications, use the **NotificationHub** client class. 
+This class must be a singleton in your client app.
+
+###iOS
+One way to instantiate a singleton instance is to store it as a parameter in the **AppDelegate** class (defined in the file AppDelegate.cs), as shown here:
+
+```csharp
+using ByteSmith.WindowsAzure.Messaging;
+...
+
+public static INotificationHub Hub { get; set; }
+
+public override bool FinishedLaunching (UIApplication app, NSDictionary options)
+{
+	window = new UIWindow (UIScreen.MainScreen.Bounds);
+
+	viewController = new ByteSmith_BlogDemo_iOSViewController ();
+	window.RootViewController = viewController;
+	window.MakeKeyAndVisible ();
+
+	Hub = new NotificationHub(
+		"<notification hub name>",
+		"<DefaultListenSharedAccessSignature connection string>");
+
+	return true;
+}
+```
+
+###Android
+One way to instantiate a singleton instance is to store it as a parameter in the constructor of the inherited **IntentService** class, as shown here:
+
+```csharp
+using ByteSmith.WindowsAzure.Messaging;
+...
+
+[Service]
+public class RemoteNotificationService : IntentService
+{
+	public static INotificationHub Hub { get; set; }
+
+	static RemoteNotificationService ()
+	{
+		Hub = new NotificationHub(
+			"<notification hub name>",
+			"<DefaultListenSharedAccessSignature connection string>");
+	}
+		
+	...
+}
+```
+
+##Register for Native Notifications
+One way to send push notifications is to have the backend specify the platform-specific payload of the notification, called native notifications. Your client app registers for native notifications by creating a native registration in the notification hub. This approach makes your client app responsible only for creating this registration in the notification hub, and keeping it up-to-date with the latest Token/Registration ID and tags. 
+
+The benefits of this approach are a simple client-side configuration, and full control of the format of the notifications in the backend. The disadvantages are the need to create and send multiple platform-specific payloads from your back-end app, and a more complex implementation of per-user personalization of notifications. 
 
 ###iOS
 
@@ -36,7 +92,8 @@ using ByteSmith.WindowsAzure.Messaging;
 public async override void RegisteredForRemoteNotifications (UIApplication application, NSData deviceToken)
 {
 	try {
-		await Hub.RegisterNativeAsync(deviceToken);
+		var registration = await Hub.RegisterNativeAsync(deviceToken);
+		Debug.WriteLine("Native Registration ID: {0}", registration.RegistrationId);
 	} catch (Exception ex) {
 		// handle error
 	}
@@ -61,7 +118,8 @@ protected async void HandleRegistration(Context context, Intent intent)
 		string error = intent.GetStringExtra("error");
 		
 		if (!String.IsNullOrEmpty (registrationId)) {
-			await Hub.RegisterNativeAsync (registrationId);
+			var registration = await Hub.RegisterNativeAsync(registrationId);
+			Debug.WriteLine("Native Registration ID: {0}", registration.RegistrationId);
 		else if (!String.IsNullOrEmpty (error)) {
 			// handle error
 		}
