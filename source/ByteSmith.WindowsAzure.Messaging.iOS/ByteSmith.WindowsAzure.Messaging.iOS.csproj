@@ -62,5 +62,6 @@
     <Compile Include="..\ByteSmith.WindowsAzure.Messaging\SASTokenGenerator.cs">
       <Link>SASTokenGenerator.cs</Link>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
 </Project>
