@@ -44,6 +44,7 @@
     <Compile Include="Registration.cs" />
     <Compile Include="NotificationHub.Dummy.cs" />
     <Compile Include="NotificationHubMessage.cs" />
+    <Compile Include="INotificationHub.Dummy.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

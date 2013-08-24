@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Serialization;
 using MonoTouch.Foundation;
 
 namespace ByteSmith.WindowsAzure.Messaging
@@ -52,7 +54,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 			{
 				ApnsExpiry = apnsExpiry,
 				BodyTemplate = bodyTemplate
-			}, templateName);
+			});
 		}
 
 		public Task<Registration> RegisterTemplateAsync(string pnsToken, string bodyTemplate, string templateName, IEnumerable<string> tags, TimeSpan? apnsExpiry)
@@ -62,7 +64,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 				Tags = tags,
 				ApnsExpiry = apnsExpiry,
 				BodyTemplate = bodyTemplate
-			}, templateName);
+			});
 		}
 
 		public Task UnregisterAllAsync(NSData deviceToken)
@@ -149,6 +151,84 @@ namespace ByteSmith.WindowsAzure.Messaging
 			}
 
 			return registrationPayload;
+		}
+
+		public void StoreRegistrationToLocal(Registration registration)
+		{
+			var documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var registrationsPath = System.IO.Path.Combine (documentsPath, 
+			                                                "NotificationHubs", 
+			                                                _endpoint.Replace ("https://", ""),
+			                                                Path);
+			if (!Directory.Exists (registrationsPath))
+				Directory.CreateDirectory (registrationsPath);
+			var filename = System.IO.Path.Combine(registrationsPath, 
+			                                      String.IsNullOrEmpty(registration.TemplateName)
+			                                      ? "$native.xml"
+			                                      : registration.TemplateName + ".xml");
+
+			using (TextWriter writer = new StreamWriter(filename)) {
+				var serializer = new XmlSerializer(typeof(Registration));
+				serializer.Serialize(writer, registration);
+			}
+		}
+
+		public Registration LoadRegistrationFromLocal(string templateName)
+		{
+			var documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var registrationsPath = System.IO.Path.Combine (documentsPath, 
+			                                                "NotificationHubs", 
+			                                                _endpoint.Replace ("https://", ""),
+			                                                Path);
+			if (!Directory.Exists (registrationsPath))
+				Directory.CreateDirectory (registrationsPath);
+			var filename = System.IO.Path.Combine(registrationsPath, 
+			                                      String.IsNullOrEmpty(templateName)
+			                                      ? "$native.xml"
+			                                      : templateName + ".xml");
+
+			if (!File.Exists (filename))
+				return null;
+
+			using (TextReader reader = new StreamReader(filename)) {
+				var serializer = new XmlSerializer(typeof(Registration));
+				var localRegistration = (Registration)serializer.Deserialize(reader);
+				return !localRegistration.ExpiresAt.HasValue || localRegistration.ExpiresAt.Value <= DateTime.UtcNow
+					? null 
+					: localRegistration;
+			}
+		}
+
+		public List<Registration> LoadAllRegistrationsFromLocal() {
+			var registrations = new List<Registration> ();
+			var documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var registrationsPath = System.IO.Path.Combine (documentsPath, 
+			                                                "NotificationHubs", 
+			                                                _endpoint.Replace ("https://", ""),
+			                                                Path);
+			if (!Directory.Exists (registrationsPath))
+				Directory.CreateDirectory (registrationsPath);
+			var filenames = Directory.EnumerateFiles(registrationsPath, "*.xml", SearchOption.TopDirectoryOnly);
+			foreach (var filename in filenames) {
+				var registration = LoadRegistrationFromLocal (
+					System.IO.Path.GetFileNameWithoutExtension (filename));
+
+				if (registration != null)
+					registrations.Add (registration);
+			}
+			return registrations;
+		}
+
+		public void DeleteLocalRegistration (string templateName)
+		{
+			var documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var filename = System.IO.Path.Combine(documentsPath, 
+				String.IsNullOrEmpty(templateName)
+					? "$native.xml"
+					: templateName + ".xml");
+
+			if (File.Exists (filename))
+				File.Delete(filename);
 		}
 
 		#endregion

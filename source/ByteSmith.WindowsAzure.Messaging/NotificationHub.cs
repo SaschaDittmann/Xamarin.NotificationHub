@@ -11,8 +11,6 @@ namespace ByteSmith.WindowsAzure.Messaging
 {
 	public partial class NotificationHub : INotificationHub
 	{
-		private readonly Dictionary<string, Registration> _registrations;
-
 		private string _endpoint;
 		private string _sasName;
 		private string _sasKey;
@@ -66,8 +64,6 @@ namespace ByteSmith.WindowsAzure.Messaging
 		{
 			Connection = connectionString;
 			Path = hubPath;
-
-			_registrations = new Dictionary<string, Registration>();
 		}
 
 		public NotificationHub(string endpoint, string sasName, string sasKey, string hubPath)
@@ -77,23 +73,21 @@ namespace ByteSmith.WindowsAzure.Messaging
 			_endpoint = endpoint.ToLower().Replace("sb://", "https://").TrimEnd('/');
 			_sasName = sasName;
 			_sasKey = sasKey;
-
-			_registrations = new Dictionary<string, Registration>();
 		}
 
 		public Task<Registration> RegisterAsync(Registration registration)
 		{
-			return Register(registration, "$native");
+			return Register(registration);
 		}
 
 		public Task<Registration> RegisterNativeAsync(string pnsToken)
 		{
-			return Register(new Registration(pnsToken, Path), "$native");
+			return Register(new Registration(pnsToken, Path));
 		}
 
 		public Task<Registration> RegisterNativeAsync(string pnsToken, IEnumerable<string> tags)
 		{
-			return Register(new Registration(pnsToken, Path) { Tags = tags }, "$native");
+			return Register(new Registration(pnsToken, Path) { Tags = tags });
 		}
 
 		public Task<Registration> RegisterTemplateAsync(string pnsToken, string bodyTemplate, string templateName)
@@ -102,7 +96,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 			{ 
 				BodyTemplate = bodyTemplate, 
 				TemplateName = templateName 
-			}, templateName);
+			});
 		}
 
 		public Task<Registration> RegisterTemplateAsync(string pnsToken, string bodyTemplate, string templateName, IEnumerable<string> tags)
@@ -112,14 +106,14 @@ namespace ByteSmith.WindowsAzure.Messaging
 				Tags = tags,
 				BodyTemplate = bodyTemplate,
 				TemplateName = templateName 
-			}, templateName);
+			});
 		}
 
 		public Task UnregisterAllAsync(string pnsToken)
 		{
-			var tasks = (from registration in _registrations 
-                         where registration.Value.PnsToken == pnsToken 
-                         select UnregisterAsync(registration.Value)).ToList();
+			var tasks = (from registration in LoadAllRegistrationsFromLocal() 
+                         where registration.PnsToken == pnsToken 
+                         select UnregisterAsync(registration)).ToList();
 		    return Task.WhenAll (tasks);
 		}
 
@@ -143,12 +137,12 @@ namespace ByteSmith.WindowsAzure.Messaging
 
 		public Task UnregisterNativeAsync()
 		{
-			return Unregister("$native", null);
+			return Unregister(null);
 		}
 
 		public Task UnregisterTemplateAsync(string templateName)
 		{
-			return Unregister(templateName, null);
+			return Unregister(templateName);
 		}
 
 		public Task<Registration> GetRegistrationAsync(Registration registration)
@@ -300,42 +294,39 @@ namespace ByteSmith.WindowsAzure.Messaging
 
 		#region Private Methods
 
-		private async Task<Registration> Register(Registration registration, string name)
+		private async Task<Registration> Register(Registration registration)
 		{
-			//if (_registrations.Count == 0) {
-			//	var regs = await ReadAllRegistrations (registration.PnsToken);
-			//	foreach (var reg in regs) {
-			//		var regKeyExisting = String.IsNullOrEmpty(reg.TemplateName)
-			//			? _endpoint + '/' + Path + "/app/$native"
-			//			: _endpoint + '/' + Path + "/app/" + reg.TemplateName;
-			//		_registrations.Add(regKeyExisting, reg);
-			//	}
-			//}
+			var localRegistration = LoadRegistrationFromLocal(registration.TemplateName);
+			var forceCreate = false;
 
-			var regKey = _endpoint + '/' + Path + "/app/" + name;
+			if (localRegistration != null) {
+				try {
+					registration = await UpdateRegistration (localRegistration);
+				} catch (WebException ex) {
+					if (((HttpWebResponse)ex.Response).StatusCode == HttpStatusCode.NotFound)
+						forceCreate = true;
+					else
+						throw ex;
+				}
+			}
 
-			if (_registrations.ContainsKey(regKey))
-				registration = await UpdateRegistration(_registrations[regKey]);
-			else
+			if (localRegistration == null || forceCreate)
 				registration = await CreateRegistration(registration);
 
-			_registrations[regKey] = registration;
+			StoreRegistrationToLocal(registration);
 
 			return registration;
 		}
 
-		private async Task Unregister(string name, string tileId)
+		private async Task Unregister(string templateName)
 		{
-			var tileKey = String.IsNullOrEmpty(tileId)
-				? "application"
-					: tileId;
-			var regKey = _endpoint + '/' + Path + '/' + tileKey + '/' + name;
-			if (!_registrations.ContainsKey(regKey))
+			var registration = LoadRegistrationFromLocal (templateName);
+			if (registration == null)
 				return;
 
-			await DeleteRegistration(_registrations[regKey]);
+			await DeleteRegistration(registration);
 
-			_registrations.Remove(regKey);
+			DeleteLocalRegistration(templateName);
 		}
 
 		private List<Registration> ProcessXmlRegistrations(string pnsToken, XmlDocument registrationsXml)
