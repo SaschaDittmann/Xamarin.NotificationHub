@@ -78,7 +78,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 			if (nodes.Count > 0) registration.RegistrationId = nodes[0].InnerText;
 
 			nodes = registrationXml.GetElementsByTagName("Tags");
-			registration.Tags = nodes.Count > 0 ? nodes[0].InnerText.Split(',') : null;
+			registration.Tags = nodes.Count > 0 ? nodes[0].InnerText.Split(',') : new string[0];
 
 			nodes = registrationXml.GetElementsByTagName("BodyTemplate");
 			registration.BodyTemplate = nodes.Count > 0 ? nodes[0].InnerText : null;
