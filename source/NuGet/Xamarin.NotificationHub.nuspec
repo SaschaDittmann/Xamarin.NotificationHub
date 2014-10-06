@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+  <metadata>
+    <id>Xamarin.NotificationHub</id>
+    <version>0.0.1-alpha</version>
+    <title>Azure Notification Hubs for Xamarin</title>
+    <authors>ducas,SaschaDittmann</authors>
+    <owners>ducas,SaschaDittmann</owners>
+    <licenseUrl>https://raw.githubusercontent.com/SaschaDittmann/Xamarin.NotificationHub/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/SaschaDittmann/Xamarin.NotificationHub</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Xamarin libraries for Azure Notification Hubs.</description>
+    <language>en-US</language>
+    <tags>Azure Notifications Xamarin iOS Android</tags>
+  </metadata>
+  <files>
+    <file src="..\ByteSmith.WindowsAzure.Messaging.Android\bin\Release\**\*.*" target="lib\MonoAndroid" />
+    <file src="..\ByteSmith.WindowsAzure.Messaging.iOS\bin\Release\**\*.*" target="lib\Monotouch" />
+  </files>
+</package>
