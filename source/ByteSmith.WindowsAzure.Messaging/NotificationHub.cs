@@ -126,6 +126,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 				if (String.IsNullOrEmpty(registration.RegistrationId))
 					throw new ArgumentException("RegistrationId missing.", "registration");
 
+				registration.ETag = "*";
 				return DeleteRegistration(registration);
 			}
 			catch (Exception ex)
@@ -301,6 +302,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 
 			if (localRegistration != null) {
 				try {
+					localRegistration.ETag = "*";
 					registration = await UpdateRegistration (localRegistration);
 				} catch (WebException ex) {
 					if (((HttpWebResponse)ex.Response).StatusCode == HttpStatusCode.NotFound)
@@ -324,6 +326,7 @@ namespace ByteSmith.WindowsAzure.Messaging
 			if (registration == null)
 				return;
 
+			registration.ETag = "*";
 			await DeleteRegistration(registration);
 
 			DeleteLocalRegistration(templateName);
